@@ -161,7 +161,7 @@ When starting a new task, create a branch using the ticket ID:
 We maintain a shared API collection to ensure everyone tests with the same data.
 
 ### Location
-File path: `./api-docs/Forum_Project.postman_collection.json`
+File path: `./postman/collections/Forum_Project.postman_collection.json`
 
 ### Setup (Import)
 1.  **Get the latest file:**
@@ -169,14 +169,14 @@ File path: `./api-docs/Forum_Project.postman_collection.json`
     git pull origin main
     ```
 2.  Open **Postman** -> Click **Import** (Top Left).
-3.  Drag and drop the `api-docs/Forum_Project.postman_collection.json` file into Postman.
+3.  Drag and drop the `postman/collections/Forum_Project.postman_collection.json` file into Postman.
 4.  (Optional) Set `base_url` variable to `http://localhost:8080` in your environment.
 
 ### Workflow: How to Share Updates
 When you add a new API endpoint (e.g., `/login`) in Postman:
 
 1.  **Export:** Right-click Collection -> **Export** -> **JSON v2.1**.
-2.  **Overwrite:** Save it to `infrastructure/api-docs/Forum_Project.postman_collection.json` (Replace the old file).
+2.  **Overwrite:** Save it to `infrastructure/postman/collections/Forum_Project.postman_collection.json` (Replace the old file).
 3.  **Push:** Run these commands to share with the team:
 
 ```bash
@@ -184,11 +184,11 @@ When you add a new API endpoint (e.g., `/login`) in Postman:
 cd infrastructure
 
 # 2. Stage ONLY the documentation file
-git add api-docs/Forum_Project.postman_collection.json
+git add postman/collections/Forum_Project.postman_collection.json
 
 # 3. Commit with Ticket ID
 git commit -m "[your-task-id]: Updated Postman collection with [your-task] endpoints"
 
 # 4. Push
 git push origin main
----
+```
