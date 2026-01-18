@@ -45,20 +45,20 @@ mkdir ForumProject
 cd ForumProject
 
 # 2. Clone the Infrastructure repo (this repo)
-git clone [https://github.com/pynode-forum-project/infrastructure.git](https://github.com/pynode-forum-project/infrastructure.git)
+git clone https://github.com/pynode-forum-project/infrastructure.git
 
 # 3. Clone the Frontend
-git clone [https://github.com/pynode-forum-project/frontend.git](https://github.com/pynode-forum-project/frontend.git)
+git clone https://github.com/pynode-forum-project/frontend.git
 
 # 4. Clone the Gateway & Backend Microservices
-git clone [https://github.com/pynode-forum-project/gateway.git](https://github.com/pynode-forum-project/gateway.git)
-git clone [https://github.com/pynode-forum-project/auth-service.git](https://github.com/pynode-forum-project/auth-service.git)
-git clone [https://github.com/pynode-forum-project/user-service.git](https://github.com/pynode-forum-project/user-service.git)
-git clone [https://github.com/pynode-forum-project/post-reply-service.git](https://github.com/pynode-forum-project/post-reply-service.git)
-git clone [https://github.com/pynode-forum-project/history-service.git](https://github.com/pynode-forum-project/history-service.git)
-git clone [https://github.com/pynode-forum-project/message-service.git](https://github.com/pynode-forum-project/message-service.git)
-git clone [https://github.com/pynode-forum-project/file-service.git](https://github.com/pynode-forum-project/file-service.git)
-git clone [https://github.com/pynode-forum-project/email-service.git](https://github.com/pynode-forum-project/email-service.git)
+git clone https://github.com/pynode-forum-project/gateway.git
+git clone https://github.com/pynode-forum-project/auth-service.git
+git clone https://github.com/pynode-forum-project/user-service.git
+git clone https://github.com/pynode-forum-project/post-reply-service.git
+git clone https://github.com/pynode-forum-project/history-service.git
+git clone https://github.com/pynode-forum-project/message-service.git
+git clone https://github.com/pynode-forum-project/file-service.git
+git clone https://github.com/pynode-forum-project/email-service.git
 ```
 
 > **Note:** If you are using SSH keys, please replace `https://github.com/...` with `git@github.com:...`.
