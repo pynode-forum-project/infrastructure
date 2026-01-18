@@ -132,3 +132,27 @@ Once the system is up, you can access the services at the following local ports:
     * Restart the specific container to apply changes: `docker-compose restart user-service`
 5.  If you changed **frontend code**:
     * Changes usually hot-reload automatically at `localhost:3000`.
+
+
+## Collaboration Workflow
+
+To ensure our code links automatically to Jira tickets, please follow these rules strictly.
+
+### 1. Git Commit Format
+Every commit message **MUST** start with the Jira Ticket ID.
+
+**Format:**
+`[Ticket-ID]: <Description>`
+
+**Examples:**
+* `FP-2: Implemented Seeding Script for User Table`
+
+**Why?**
+This allows Jira to automatically track our progress and attach code changes to the board.
+
+### 2. Branch Naming (Optional but Recommended)
+When starting a new task, create a branch using the ticket ID:
+* `feature/FP-2-seeding`
+* `fix/FP-13-JWT`
+
+---
