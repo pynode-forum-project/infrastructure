@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # ----------------------------
+  # Databases
+  # ----------------------------
+  
+  # 1. MySQL (For User, History, Message Service)
+  mysql:
+    image: mysql:8.0
+    container_name: forum_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root  # Simple password for development environment
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+        # Mount initialization script, automatically create 3 databases when starting
+      - ./mysql-init:/docker-entrypoint-initdb.d
+
+  # 2. MongoDB (For Post Service)
+  mongo:
+    image: mongo:latest
+    container_name: forum_mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  # ----------------------------
+  # Message Queue
+  # ----------------------------
+  
+  # RabbitMQ (For Email Service)
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: forum_rabbitmq
+    ports:
+      - "5672:5672"   # Code connection port
+      - "15672:15672" # Web management backend port
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  # ----------------------------
+  # TODO: Microservice placeholder 
+  # ----------------------------
+  # user-service:
+  #   build: ../user-service
+  #   ports:
+  #     - "5001:5000"
+  #   depends_on:
+  #     - mysql
+  
+volumes:
+  mysql_data:
+  mongo_data:
+  rabbitmq_data:
