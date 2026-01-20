@@ -57,7 +57,7 @@ services:
     build: ../user-service
     container_name: forum_user_service
     ports:
-      - "5001:5000"
+      - "5001:5001"
     environment:
       - DATABASE_URL=mysql+pymysql://root:root@mysql:3306/forum_user_db
       - JWT_SECRET=my-super-secret-key-change-in-production
