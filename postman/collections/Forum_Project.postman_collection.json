@@ -59,8 +59,85 @@
 			]
 		},
 		{
+			"name": "User Service (Internal)",
+			"description": "Internal APIs for User Service - called by Auth Service.\nDirect access to User Service at http://localhost:5000",
+			"item": [
+				{
+					"name": "Create User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{user_service_url}}/internal/users",
+							"host": ["{{user_service_url}}"],
+							"path": ["internal", "users"]
+						},
+						"description": "Create a new user (called by Auth Service during registration)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{user_service_url}}/internal/users/{{user_id}}",
+							"host": ["{{user_service_url}}"],
+							"path": ["internal", "users", "{{user_id}}"]
+						},
+						"description": "Get a user by their UUID"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by Email",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{user_service_url}}/internal/users/email?email=john@example.com",
+							"host": ["{{user_service_url}}"],
+							"path": ["internal", "users", "email"],
+							"query": [
+								{
+									"key": "email",
+									"value": "john@example.com"
+								}
+							]
+						},
+						"description": "Get a user by their email address (used for login verification)"
+					},
+					"response": []
+				},
+				{
+					"name": "Verify User Email",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{user_service_url}}/internal/users/{{user_id}}/verify",
+							"host": ["{{user_service_url}}"],
+							"path": ["internal", "users", "{{user_id}}", "verify"]
+						},
+						"description": "Verify a user's email (changes userType from 'unverified' to 'normal_user')"
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "User",
-			"description": "User management endpoints",
+			"description": "User management endpoints (via Gateway)",
 			"item": []
 		},
 		{
@@ -88,12 +165,26 @@
 		{
 			"key": "base_url",
 			"value": "http://localhost:8080",
-			"type": "string"
+			"type": "string",
+			"description": "Gateway URL"
+		},
+		{
+			"key": "user_service_url",
+			"value": "http://localhost:5000",
+			"type": "string",
+			"description": "User Service direct URL (for internal APIs)"
 		},
 		{
 			"key": "auth_token",
 			"value": "",
-			"type": "string"
+			"type": "string",
+			"description": "JWT token from login"
+		},
+		{
+			"key": "user_id",
+			"value": "",
+			"type": "string",
+			"description": "User UUID for testing"
 		}
 	]
 }

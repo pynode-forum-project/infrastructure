@@ -52,6 +52,17 @@ services:
   #     - "5001:5000"
   #   depends_on:
   #     - mysql
+
+  user-service:
+    build: ../user-service
+    container_name: forum_user_service
+    ports:
+      - "5001:5000"
+    environment:
+      - DATABASE_URL=mysql+pymysql://root:root@mysql:3306/forum_user_db
+      - JWT_SECRET=my-super-secret-key-change-in-production
+    depends_on:
+      - mysql
   
 volumes:
   mysql_data:
