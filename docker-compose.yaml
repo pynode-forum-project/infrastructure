@@ -127,6 +127,10 @@ services:
       - "3000:3000"
     environment:
       - VITE_API_URL=http://gateway:8080
+      # TODO: Remove these mock flags when backend is ready
+      # Temporary: Enable mock mode for frontend development/testing
+      - VITE_MOCK_AUTH=true
+      - VITE_MOCK_POSTS=true
     depends_on:
       - gateway
 
