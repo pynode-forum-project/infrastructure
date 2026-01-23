@@ -70,16 +70,72 @@ Once all repositories are cloned, navigate into the infrastructure folder and st
 ```bash
 cd infrastructure
 
-# Start databases and services in the background
+# Start all services in the background (first time or after code changes)
 docker-compose up -d --build
+
+# Start services without rebuilding (faster, use when no code changes)
+docker-compose up -d
+
+# View real-time logs for all services
+docker-compose logs -f
+
+# View logs for a specific service
+docker-compose logs -f frontend
+docker-compose logs -f auth-service
+
+# Restart a specific service (after code changes)
+docker-compose restart user-service
+
+# Check service status
+docker-compose ps
 ```
 
 * The `--build` flag ensures that Docker rebuilds the images if you have changed any code in the Python/Node services.
 * The first launch may take a few minutes to download MySQL/MongoDB images and install dependencies.
+* Services with health checks (MySQL, RabbitMQ) will wait until healthy before dependent services start.
 
 To stop the services, run:
 ```bash
+# Stop and remove containers (data volumes preserved)
 docker-compose down
+
+# Stop and remove containers AND volumes (fresh start, deletes all data)
+docker-compose down -v
+```
+
+---
+
+## Service Architecture
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│                        Frontend (React)                         │
+│                      http://localhost:3000                      │
+└─────────────────────────────┬───────────────────────────────────┘
+                              │ /api/*
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Gateway (Node/Express)                       │
+│                      http://localhost:8080                      │
+└───┬─────────┬─────────┬─────────┬─────────┬─────────┬───────────┘
+    │         │         │         │         │         │
+    ▼         ▼         ▼         ▼         ▼         ▼
+┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐ ┌───────┐
+│ Auth  │ │ User  │ │ Post  │ │History│ │Message│ │ File  │
+│ :5000 │ │ :5001 │ │ :5002 │ │ :5003 │ │ :5004 │ │ :5005 │
+└───┬───┘ └───┬───┘ └───┬───┘ └───┬───┘ └───┬───┘ └───────┘
+    │         │         │         │         │
+    ▼         ▼         │         ▼         ▼
+┌─────────────────┐     │    ┌─────────────────┐
+│     MySQL       │     │    │    RabbitMQ     │
+│     :3306       │     │    │  :5672/:15672   │
+└─────────────────┘     │    └────────┬────────┘
+                        ▼             │
+                 ┌───────────┐        ▼
+                 │  MongoDB  │  ┌───────────┐
+                 │  :27017   │  │   Email   │
+                 └───────────┘  │  Service  │
+                                └───────────┘
 ```
 
 ---
@@ -88,20 +144,22 @@ docker-compose down
 
 Once the system is up, you can access the services at the following local ports:
 
-| Service | Technology | Port | Description |
-| :--- | :--- | :--- | :--- |
-| **Frontend** | React | `http://localhost:3000` | Main User Interface |
-| **Gateway** | Node/Express | `http://localhost:8080` | **API Entry Point** (All requests go here) |
-| **Auth Service** | Flask | `5000` (Internal) | Login & Registration Logic |
-| **User Service** | Flask | `5001` (Internal) | User Data Management |
-| **Post Service** | Node/Express | `5002` (Internal) | Posts & Replies |
-| **History Service** | Flask | `5003` (Internal) | Browsing History |
-| **Message Service** | Flask | `5004` (Internal) | Contact Admin Messages |
-| **File Service** | Flask | `5005` (Internal) | File Upload (S3) |
-| **Email Service** | Flask | N/A | Background Worker (RabbitMQ Listener) |
-| **MySQL** | Database | `3306` | User, History, Message DBs (Root Pass: `root`) |
-| **MongoDB** | Database | `27017` | Post & Reply DB |
-| **RabbitMQ** | Queue | `15672` | Management Console |
+| Service | Technology | Port | Status | Description |
+| :--- | :--- | :--- | :---: | :--- |
+| **Frontend** | React/Vite | `http://localhost:3000` | ✅ | Main User Interface |
+| **Gateway** | Node/Express | `http://localhost:8080` | ✅ | **API Entry Point** (All requests go here) |
+| **Auth Service** | Flask | `5000` | ✅ | Login & Registration Logic |
+| **User Service** | Flask | `5001` | ✅ | User Data Management |
+| **Post Service** | Node/Express | `5002` | ⏳ | Posts & Replies (TODO) |
+| **History Service** | Flask | `5003` | ⏳ | Browsing History (TODO) |
+| **Message Service** | Flask | `5004` | ⏳ | Contact Admin Messages (TODO) |
+| **File Service** | Flask | `5005` | ⏳ | File Upload (S3) (TODO) |
+| **Email Service** | Flask | N/A | ⏳ | Background Worker (TODO) |
+| **MySQL** | Database | `3306` | ✅ | User, History, Message DBs (Root Pass: `root`) |
+| **MongoDB** | Database | `27017` | ✅ | Post & Reply DB |
+| **RabbitMQ** | Queue | `5672` / `15672` | ✅ | Message Queue / Management Console (guest/guest) |
+
+> **Legend:** ✅ = Configured in docker-compose | ⏳ = Pending implementation
 
 > **Important:** The Frontend should only communicate with the **Gateway (8080)**. Do not make direct calls to ports 5000-5005 from the browser.
 
@@ -115,11 +173,44 @@ Once the system is up, you can access the services at the following local ports:
 
 **2. Database Connection Refused**
 * **Cause:** The database containers might still be initializing when the backend services try to connect.
-* **Fix:** Wait a few seconds and the services usually auto-retry. If not, restart the specific service: `docker-compose restart user-service`.
+* **Fix:** Wait a few seconds and the services usually auto-retry. Health checks are configured for MySQL and RabbitMQ. If issues persist, restart the specific service: `docker-compose restart user-service`.
 
 **3. Port Already in Use**
 * **Cause:** You have another instance of MySQL (3306) or Mongo (27017) running locally on your machine.
 * **Fix:** Stop your local database services or kill the process occupying the port.
+```bash
+# Find process using a port (macOS/Linux)
+lsof -i :3306
+
+# Kill the process
+kill -9 <PID>
+```
+
+**4. Frontend API calls failing (CORS or connection errors)**
+* **Cause:** Gateway or backend services are not running, or CORS is misconfigured.
+* **Fix:** 
+  1. Check if all services are running: `docker-compose ps`
+  2. Check gateway logs: `docker-compose logs gateway`
+  3. Ensure frontend is calling `http://localhost:8080/api/*` (not direct service ports)
+
+**5. Container keeps restarting**
+* **Cause:** Application error or missing environment variables.
+* **Fix:** Check the logs for the specific service:
+```bash
+docker-compose logs auth-service
+```
+
+**6. Need a fresh start (reset everything)**
+```bash
+# Stop all containers and remove volumes
+docker-compose down -v
+
+# Remove all built images (optional, forces full rebuild)
+docker-compose down --rmi all
+
+# Start fresh
+docker-compose up -d --build
+```
 
 ---
 

@@ -1,207 +1,627 @@
 {
-	"info": {
-		"_postman_id": "forum-project-collection",
-		"name": "Forum Project",
-		"description": "API collection for the Forum Project microservices.\n\nAll requests should go through the Gateway at http://localhost:8080",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-	},
-	"item": [
-		{
-			"name": "Auth",
-			"description": "Authentication endpoints (Login, Register, etc.)",
-			"item": [
-				{
-					"name": "Register",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/auth/register",
-							"host": ["{{base_url}}"],
-							"path": ["auth", "register"]
-						},
-						"description": "Register a new user account"
-					},
-					"response": []
-				},
-				{
-					"name": "Login",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/auth/login",
-							"host": ["{{base_url}}"],
-							"path": ["auth", "login"]
-						},
-						"description": "Login and receive JWT token"
-					},
-					"response": []
-				},
-				{
-					"name": "Verify Token",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{auth_token}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/auth/verify-token",
-							"host": ["{{base_url}}"],
-							"path": ["auth", "verify-token"]
-						},
-						"description": "Verify JWT token validity"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "User",
-			"description": "User management endpoints",
-			"item": []
-		},
-		{
-			"name": "Post",
-			"description": "Post and Reply endpoints",
-			"item": []
-		},
-		{
-			"name": "History",
-			"description": "Browsing history endpoints",
-			"item": []
-		},
-		{
-			"name": "Message",
-			"description": "Contact admin message endpoints",
-			"item": [
-				{
-					"name": "Send Message",
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"email\": \"user@example.com\",\n  \"message\": \"Your message here\",\n  \"userId\": \"optional-user-id\",\n  \"images\": [\"https://s3.../image1.jpg\"],\n  \"attachments\": [\"https://s3.../file1.pdf\"]\n}"
-						},
-						"url": {
-							"raw": "{{base_url}}/api/messages",
-							"host": ["{{base_url}}"],
-							"path": ["api", "messages"]
-						},
-						"description": "Send a contact message (no authentication required)"
-					},
-					"response": []
-				},
-				{
-					"name": "Get Messages (Inbox)",
-					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Authorization",
-								"value": "Bearer {{auth_token}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{base_url}}/api/messages?page=1&per_page=20&status=pending",
-							"host": ["{{base_url}}"],
-							"path": ["api", "messages"],
-							"query": [
-								{
-									"key": "page",
-									"value": "1",
-									"description": "Page number"
-								},
-								{
-									"key": "per_page",
-									"value": "20",
-									"description": "Items per page"
-								},
-								{
-									"key": "status",
-									"value": "pending",
-									"description": "Filter by status (optional: pending, read, replied)",
-									"disabled": true
-								}
-							]
-						},
-						"description": "Get inbox messages (Admin only)"
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "File",
-			"description": "File upload endpoints (S3)",
-			"item": [
-				{
-					"name": "Upload Image",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "file",
-									"type": "file",
-									"src": [],
-									"description": "Image file (png, jpg, jpeg, gif, webp, max 10MB)"
-								}
-							]
-						},
-						"url": {
-							"raw": "{{base_url}}/api/files/upload",
-							"host": ["{{base_url}}"],
-							"path": ["api", "files", "upload"]
-						},
-						"description": "Upload an image file to S3 and get the public URL"
-					},
-					"response": []
-				}
-			]
-		}
-	],
-	"variable": [
-		{
-			"key": "base_url",
-			"value": "http://localhost:8080",
-			"type": "string"
-		},
-		{
-			"key": "auth_token",
-			"value": "",
-			"type": "string"
-		}
-	]
+  "info": {
+    "_postman_id": "forum-project-collection",
+    "name": "Forum Project",
+    "description": "API collection for the Forum Project microservices.\n\nAll requests should go through the Gateway at http://localhost:8080\n\n## Test Users (from seed)\n\n| Email | Password | Type |\n|-------|----------|------|\n| superadmin@forum.com | SuperAdmin123! | superadmin |\n| admin@forum.com | AdminUser123! | admin |\n| john.doe@example.com | Password123! | normal_user |\n| jane.smith@example.com | Password123! | normal_user |",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "id": "2be5436f-cadd-49b2-8849-20eff99cb389",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Register a new user account"
+          },
+          "response": []
+        },
+        {
+          "name": "Login (Normal User)",
+          "id": "33e66a65-960e-4886-b228-7294a4d88a42",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login as normal user (from seed data)"
+          },
+          "response": []
+        },
+        {
+          "name": "Login (Admin)",
+          "id": "login-admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@forum.com\",\n  \"password\": \"AdminUser123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login as admin user (from seed data)"
+          },
+          "response": []
+        },
+        {
+          "name": "Login (SuperAdmin)",
+          "id": "login-superadmin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"superadmin@forum.com\",\n  \"password\": \"SuperAdmin123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Login as superadmin (from seed data)"
+          },
+          "response": []
+        }
+      ],
+      "id": "b4d9f625-2677-41d3-a3a4-b411c78f85bc",
+      "description": "Authentication endpoints (Login, Register, etc.)"
+    },
+    {
+      "name": "User Service (Internal)",
+      "item": [
+        {
+          "name": "Create User",
+          "id": "e7552e1f-bb27-4402-89fd-5915eb1b23e4",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"New\",\n  \"lastName\": \"User\",\n  \"email\": \"newuser@example.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{user_service_url}}/internal/users",
+              "host": [
+                "{{user_service_url}}"
+              ],
+              "path": [
+                "internal",
+                "users"
+              ]
+            },
+            "description": "Create a new user (called by Auth Service during registration)"
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Credentials",
+          "id": "verify-credentials",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": {
+              "raw": "{{user_service_url}}/internal/users/verify",
+              "host": [
+                "{{user_service_url}}"
+              ],
+              "path": [
+                "internal",
+                "users",
+                "verify"
+              ]
+            },
+            "description": "Verify user credentials (called by Auth Service during login)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by ID",
+          "id": "3e68c218-8c69-41ff-a793-69a2dcacf753",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{user_service_url}}/internal/users/{{user_id}}",
+              "host": [
+                "{{user_service_url}}"
+              ],
+              "path": [
+                "internal",
+                "users",
+                "{{user_id}}"
+              ]
+            },
+            "description": "Get a user by their UUID"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by Email",
+          "id": "1a22ebd5-037b-4755-beff-a82a3cac683d",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{user_service_url}}/internal/users/email?email=john.doe@example.com",
+              "host": [
+                "{{user_service_url}}"
+              ],
+              "path": [
+                "internal",
+                "users",
+                "email"
+              ],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "john.doe@example.com"
+                }
+              ]
+            },
+            "description": "Get a user by their email address"
+          },
+          "response": []
+        },
+        {
+          "name": "Verify User Email",
+          "id": "b237cc30-f746-4e54-b430-8b7e996dcfaf",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": {
+              "raw": "{{user_service_url}}/internal/users/{{user_id}}/verify",
+              "host": [
+                "{{user_service_url}}"
+              ],
+              "path": [
+                "internal",
+                "users",
+                "{{user_id}}",
+                "verify"
+              ]
+            },
+            "description": "Verify a user's email (changes userType from 'unverified' to 'normal_user')"
+          },
+          "response": []
+        }
+      ],
+      "id": "3125f515-4095-45fb-b31e-240bea9692b4",
+      "description": "Internal APIs for User Service - called by Auth Service.\n\nDirect access to User Service at http://localhost:5001"
+    },
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "Get Current User (Me)",
+          "id": "get-current-user",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "me"
+              ]
+            },
+            "description": "Get current logged-in user's profile (requires JWT)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Profile",
+          "id": "get-user-profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users/{{user_id}}/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{user_id}}",
+                "profile"
+              ]
+            },
+            "description": "Get a user's profile by ID (requires JWT)"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Profile",
+          "id": "update-profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Updated\",\n  \"lastName\": \"Name\",\n  \"profileImageURL\": \"https://example.com/avatar.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/{{user_id}}/profile",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{user_id}}",
+                "profile"
+              ]
+            },
+            "description": "Update own profile (requires JWT, can only update own profile)"
+          },
+          "response": []
+        },
+        {
+          "name": "List All Users (Admin)",
+          "id": "list-users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/users?page=1&per_page=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "per_page",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "List all users with pagination (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Ban User (Admin)",
+          "id": "ban-user",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isActive\": false\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/{{user_id}}/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{user_id}}",
+                "status"
+              ]
+            },
+            "description": "Ban a user (Admin only, cannot ban superadmin)"
+          },
+          "response": []
+        },
+        {
+          "name": "Unban User (Admin)",
+          "id": "unban-user",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/{{user_id}}/status",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "users",
+                "{{user_id}}",
+                "status"
+              ]
+            },
+            "description": "Unban a user (Admin only)"
+          },
+          "response": []
+        }
+      ],
+      "id": "f57f1e2b-44ee-43ef-a044-88c7571473f2",
+      "description": "User management endpoints (via Gateway, requires JWT)"
+    },
+    {
+      "name": "Post",
+      "item": [],
+      "id": "ad14b186-4ca2-4250-8954-bc370ca4dac1",
+      "description": "Post and Reply endpoints"
+    },
+    {
+      "name": "History",
+      "item": [],
+      "id": "e326a697-83c7-4afe-bea0-3338bdf3c177",
+      "description": "Browsing history endpoints"
+    },
+    {
+      "name": "Message",
+      "item": [
+        {
+          "name": "Send Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"message\": \"Your message here\",\n  \"userId\": \"optional-user-id\",\n  \"images\": [\"https://s3.../image1.jpg\"],\n  \"attachments\": [\"https://s3.../file1.pdf\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/messages",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "messages"
+              ]
+            },
+            "description": "Send a contact message (no authentication required)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Messages (Inbox)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/messages?page=1&per_page=20&status=pending",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "messages"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                },
+                {
+                  "key": "per_page",
+                  "value": "20",
+                  "description": "Items per page"
+                },
+                {
+                  "key": "status",
+                  "value": "pending",
+                  "description": "Filter by status (optional: pending, read, replied)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get inbox messages (Admin only)"
+          },
+          "response": []
+        }
+      ],
+      "id": "7feec677-4b33-4801-8f2d-3766c3c8fcd2",
+      "description": "Contact admin message endpoints"
+    },
+    {
+      "name": "File",
+      "item": [
+        {
+          "name": "Upload Image",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "Image file (png, jpg, jpeg, gif, webp, max 10MB)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/files/upload",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "files",
+                "upload"
+              ]
+            },
+            "description": "Upload an image file to S3 and get the public URL"
+          },
+          "response": []
+        }
+      ],
+      "id": "db2e66a5-6a3b-4071-8f1a-5afc443c3734",
+      "description": "File upload endpoints (S3)"
+    }
+  ],
+  "variable": [
+    {
+      "id": "06ed2d63-1acb-4a1d-9198-8bb1145cab77",
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string",
+      "description": "Gateway URL"
+    },
+    {
+      "id": "02441250-c629-46c5-94db-3716962e7f08",
+      "key": "user_service_url",
+      "value": "http://localhost:5001",
+      "type": "string",
+      "description": "User Service direct URL (for internal APIs)"
+    },
+    {
+      "id": "e5fb6861-2edc-4a2b-b048-2a9517aac923",
+      "key": "auth_token",
+      "value": "",
+      "type": "string",
+      "description": "JWT token from login"
+    },
+    {
+      "id": "d724a013-9b21-479d-a6db-a07e37c1f1d8",
+      "key": "user_id",
+      "value": "",
+      "type": "string",
+      "description": "User UUID for testing"
+    }
+  ]
 }
