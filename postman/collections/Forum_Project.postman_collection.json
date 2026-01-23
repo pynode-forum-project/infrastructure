@@ -479,13 +479,117 @@
     },
     {
       "name": "Message",
-      "item": [],
+      "item": [
+        {
+          "name": "Send Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"message\": \"Your message here\",\n  \"userId\": \"optional-user-id\",\n  \"images\": [\"https://s3.../image1.jpg\"],\n  \"attachments\": [\"https://s3.../file1.pdf\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/messages",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "messages"
+              ]
+            },
+            "description": "Send a contact message (no authentication required)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Messages (Inbox)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/messages?page=1&per_page=20&status=pending",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "messages"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                },
+                {
+                  "key": "per_page",
+                  "value": "20",
+                  "description": "Items per page"
+                },
+                {
+                  "key": "status",
+                  "value": "pending",
+                  "description": "Filter by status (optional: pending, read, replied)",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Get inbox messages (Admin only)"
+          },
+          "response": []
+        }
+      ],
       "id": "7feec677-4b33-4801-8f2d-3766c3c8fcd2",
       "description": "Contact admin message endpoints"
     },
     {
       "name": "File",
-      "item": [],
+      "item": [
+        {
+          "name": "Upload Image",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "Image file (png, jpg, jpeg, gif, webp, max 10MB)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/files/upload",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "files",
+                "upload"
+              ]
+            },
+            "description": "Upload an image file to S3 and get the public URL"
+          },
+          "response": []
+        }
+      ],
       "id": "db2e66a5-6a3b-4071-8f1a-5afc443c3734",
       "description": "File upload endpoints (S3)"
     }
