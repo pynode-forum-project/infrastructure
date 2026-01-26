@@ -1,7 +1,0 @@
-CREATE DATABASE IF NOT EXISTS forum_user_db;
-
-CREATE DATABASE IF NOT EXISTS forum_history_db;
-
-CREATE DATABASE IF NOT EXISTS forum_message_db;
-
-GRANT ALL PRIVILEGES ON *.* TO 'root'@'%';
