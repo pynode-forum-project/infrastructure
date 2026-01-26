@@ -1,140 +1,263 @@
-version: '3.8'
-
 services:
-  # ----------------------------
-  # Databases
-  # ----------------------------
-  
-  # 1. MySQL (For User, History, Message Service)
+  # ===========================================
+  # DATABASES
+  # ===========================================
   mysql:
     image: mysql:8.0
-    container_name: forum_mysql
-    restart: always
+    container_name: ${COMPOSE_PROJECT_NAME:-forum}-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: root  # Simple password for development environment
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: user_db
     ports:
-      - "3306:3306"
+      - "${MYSQL_PORT:-3306}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      # Mount initialization script, automatically create 3 databases when starting
-      - ./mysql-init:/docker-entrypoint-initdb.d
+      - ./init-scripts/mysql:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - forum-network
 
-  # 2. MongoDB (For Post Service)
-  mongo:
-    image: mongo:latest
-    container_name: forum_mongo
-    restart: always
+  mongodb:
+    image: mongo:6.0
+    container_name: ${COMPOSE_PROJECT_NAME:-forum}-mongodb
     ports:
-      - "27017:27017"
+      - "${MONGODB_PORT:-27018}:27017"
     volumes:
       - mongo_data:/data/db
-
-  # ----------------------------
-  # Message Queue
-  # ----------------------------
-  
-  # RabbitMQ (For Email Service)
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: forum_rabbitmq
-    ports:
-      - "5672:5672"   # Code connection port
-      - "15672:15672" # Web management backend port
-    volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
+      - ./init-scripts/mongo:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - forum-network
 
-  # ----------------------------
-  # Backend Microservices
-  # ----------------------------
-
-  # User Service (Flask) - Port 5001
-  user-service:
-    build: ../user-service
-    container_name: forum_user_service
-    restart: always
+  # ===========================================
+  # MESSAGE QUEUE
+  # ===========================================
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: ${COMPOSE_PROJECT_NAME:-forum}-rabbitmq
     ports:
-      - "5001:5001"
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MGMT_PORT:-15672}:15672"
     environment:
-      - DATABASE_URI=mysql+pymysql://root:root@mysql:3306/forum_user_db
-      - JWT_SECRET=my-super-secret-key-change-in-production
-    depends_on:
-      mysql:
-        condition: service_healthy
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - forum-network
 
-  # Auth Service (Flask) - Port 5000
-  auth-service:
-    build: ../auth-service
-    container_name: forum_auth_service
-    restart: always
-    ports:
-      - "5000:5000"
-    environment:
-      - JWT_SECRET_KEY=my-super-secret-key-change-in-production
-      - USER_SERVICE_URL=http://user-service:5001
-      - RABBITMQ_HOST=rabbitmq
-      - RABBITMQ_PORT=5672
-      - RABBITMQ_USER=guest
-      - RABBITMQ_PASSWORD=guest
-    depends_on:
-      - user-service
-      - rabbitmq
-
-  # ----------------------------
-  # API Gateway
-  # ----------------------------
-
-  # Gateway (Node.js/Express) - Port 8080
+  # ===========================================
+  # BACKEND SERVICES
+  # ===========================================
   gateway:
-    build: ../gateway
-    container_name: forum_gateway
-    restart: always
+    build:
+      context: ../gateway
+      dockerfile: Dockerfile
+    container_name: ${COMPOSE_PROJECT_NAME:-forum}-gateway
     ports:
-      - "8080:8080"
+      - "${GATEWAY_PORT:-8080}:8080"
     environment:
       - NODE_ENV=development
       - PORT=8080
       - AUTH_SERVICE_URL=http://auth-service:5000
       - USER_SERVICE_URL=http://user-service:5001
-      - POST_SERVICE_URL=http://post-reply-service:5002
+      - POST_SERVICE_URL=http://post-service:5002
       - HISTORY_SERVICE_URL=http://history-service:5003
       - MESSAGE_SERVICE_URL=http://message-service:5004
       - FILE_SERVICE_URL=http://file-service:5005
-      - ALLOWED_ORIGINS=http://localhost:3000,http://frontend:3000
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
     depends_on:
-      - auth-service
-      - user-service
+      auth-service:
+        condition: service_started
+      user-service:
+        condition: service_started
+    networks:
+      - forum-network
 
-  # ----------------------------
-  # Frontend
-  # ----------------------------
-
-  # Frontend (React/Vite) - Port 3000
-  frontend:
-    build: ../frontend
-    container_name: forum_frontend
-    restart: always
+  auth-service:
+    build:
+      context: ../auth-service
+      dockerfile: Dockerfile
+    container_name: ${COMPOSE_PROJECT_NAME:-forum}-auth-service
     ports:
-      - "3000:3000"
+      - "${AUTH_SERVICE_PORT:-5000}:5000"
     environment:
-      - VITE_API_URL=http://gateway:8080
-      # TODO: Remove these mock flags when backend is ready
-      # Temporary: Enable mock mode for frontend development/testing
-      - VITE_MOCK_AUTH=true
-      - VITE_MOCK_POSTS=true
+      - FLASK_ENV=development
+      - USER_SERVICE_URL=http://user-service:5001
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - JWT_EXPIRATION_HOURS=24
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+    networks:
+      - forum-network
+
+  user-service:
+    build:
+      context: ../user-service
+      dockerfile: Dockerfile
+    container_name: ${COMPOSE_PROJECT_NAME:-forum}-user-service
+    ports:
+      - "${USER_SERVICE_PORT:-5001}:5001"
+    environment:
+      - FLASK_ENV=development
+      - DATABASE_URL=mysql+pymysql://root:root@mysql:3306/user_db
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - forum-network
+
+  post-service:
+    build:
+      context: ../post-reply-service
+      dockerfile: Dockerfile
+    container_name: ${COMPOSE_PROJECT_NAME:-forum}-post-service
+    ports:
+      - "${POST_SERVICE_PORT:-5002}:5002"
+    environment:
+      - NODE_ENV=development
+      - PORT=5002
+      - MONGODB_URI=mongodb://mongodb:27017/post_db
+      - USER_SERVICE_URL=http://user-service:5001
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - forum-network
+
+  history-service:
+    build:
+      context: ../history-service
+      dockerfile: Dockerfile
+    container_name: ${COMPOSE_PROJECT_NAME:-forum}-history-service
+    ports:
+      - "${HISTORY_SERVICE_PORT:-5003}:5003"
+    environment:
+      - NODE_ENV=development
+      - PORT=5003
+      - MONGODB_URI=mongodb://mongodb:27017/history_db
+      - POST_SERVICE_URL=http://post-service:5002
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - forum-network
+
+  message-service:
+    build:
+      context: ../message-service
+      dockerfile: Dockerfile
+    container_name: ${COMPOSE_PROJECT_NAME:-forum}-message-service
+    ports:
+      - "${MESSAGE_SERVICE_PORT:-5004}:5004"
+    environment:
+      - FLASK_ENV=development
+      - DATABASE_URL=mysql+pymysql://root:root@mysql:3306/message_db
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - forum-network
+
+  file-service:
+    build:
+      context: ../file-service
+      dockerfile: Dockerfile
+    container_name: ${COMPOSE_PROJECT_NAME:-forum}-file-service
+    ports:
+      - "${FILE_SERVICE_PORT:-5005}:5005"
+    environment:
+      - FLASK_ENV=development
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-your-access-key}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-your-secret-key}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - S3_BUCKET_NAME=${S3_BUCKET_NAME:-forum-uploads}
+    networks:
+      - forum-network
+
+  email-service:
+    build:
+      context: ../email-service
+      dockerfile: Dockerfile
+    container_name: ${COMPOSE_PROJECT_NAME:-forum}-email-service
+    environment:
+      - FLASK_ENV=development
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
+      # Email configuration - use Mailhog for development or real SMTP for production
+      # For Mailhog (development): MAIL_SERVER=mailhog, MAIL_PORT=1025, MAIL_USE_TLS=false
+      # For real SMTP (production): Set MAIL_SERVER, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD, MAIL_USE_TLS
+      - MAIL_SERVER=${MAIL_SERVER:-mailhog}
+      - MAIL_PORT=${MAIL_PORT:-1025}
+      - MAIL_USERNAME=${MAIL_USERNAME:-}
+      - MAIL_PASSWORD=${MAIL_PASSWORD:-}
+      - MAIL_USE_TLS=${MAIL_USE_TLS:-false}
+      - MAIL_USE_SSL=${MAIL_USE_SSL:-false}
+      - MAIL_DEFAULT_SENDER=${MAIL_DEFAULT_SENDER:-noreply@forum.com}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mailhog:
+        condition: service_started
+    networks:
+      - forum-network
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: ${COMPOSE_PROJECT_NAME:-forum}-mailhog
+    ports:
+      - "${MAILHOG_SMTP_PORT:-1025}:1025"   # SMTP server
+      - "${MAILHOG_WEB_PORT:-8025}:8025"   # Web UI
+    networks:
+      - forum-network
+
+  # ===========================================
+  # FRONTEND
+  # ===========================================
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: ${COMPOSE_PROJECT_NAME:-forum}-frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    environment:
+      - VITE_API_BASE_URL=/api
     depends_on:
       - gateway
+    networks:
+      - forum-network
+
+networks:
+  forum-network:
+    name: ${COMPOSE_PROJECT_NAME:-forum}-network
+    driver: bridge
 
 volumes:
   mysql_data:
+    name: ${COMPOSE_PROJECT_NAME:-forum}_mysql_data
   mongo_data:
+    name: ${COMPOSE_PROJECT_NAME:-forum}_mongo_data
   rabbitmq_data:
+    name: ${COMPOSE_PROJECT_NAME:-forum}_rabbitmq_data
