@@ -205,32 +205,35 @@ services:
     environment:
       - FLASK_ENV=development
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672
-      # Email configuration - use Mailhog for development or real SMTP for production
-      # For Mailhog (development): MAIL_SERVER=mailhog, MAIL_PORT=1025, MAIL_USE_TLS=false
-      # For real SMTP (production): Set MAIL_SERVER, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD, MAIL_USE_TLS
-      - MAIL_SERVER=${MAIL_SERVER:-mailhog}
-      - MAIL_PORT=${MAIL_PORT:-1025}
+      # Email configuration - Real SMTP settings
+      # Common SMTP servers:
+      # Gmail: smtp.gmail.com, Port: 587 (TLS) or 465 (SSL)
+      # Outlook: smtp-mail.outlook.com, Port: 587 (TLS)
+      # Custom SMTP: Set MAIL_SERVER to your SMTP server address
+      # IMPORTANT: MAIL_USERNAME and MAIL_PASSWORD are required for SMTP authentication
+      - MAIL_SERVER=${MAIL_SERVER:-smtp.gmail.com}
+      - MAIL_PORT=${MAIL_PORT:-587}
       - MAIL_USERNAME=${MAIL_USERNAME:-}
       - MAIL_PASSWORD=${MAIL_PASSWORD:-}
-      - MAIL_USE_TLS=${MAIL_USE_TLS:-false}
+      - MAIL_USE_TLS=${MAIL_USE_TLS:-true}
       - MAIL_USE_SSL=${MAIL_USE_SSL:-false}
       - MAIL_DEFAULT_SENDER=${MAIL_DEFAULT_SENDER:-noreply@forum.com}
     depends_on:
       rabbitmq:
         condition: service_healthy
-      mailhog:
-        condition: service_started
     networks:
       - forum-network
 
-  mailhog:
-    image: mailhog/mailhog:latest
-    container_name: ${COMPOSE_PROJECT_NAME:-forum}-mailhog
-    ports:
-      - "${MAILHOG_SMTP_PORT:-1025}:1025"   # SMTP server
-      - "${MAILHOG_WEB_PORT:-8025}:8025"   # Web UI
-    networks:
-      - forum-network
+  # MailHog service (optional, for local development/testing only)
+  # Uncomment below if you want to use MailHog for local email testing
+  # mailhog:
+  #   image: mailhog/mailhog:latest
+  #   container_name: ${COMPOSE_PROJECT_NAME:-forum}-mailhog
+  #   ports:
+  #     - "${MAILHOG_SMTP_PORT:-1025}:1025"   # SMTP server
+  #     - "${MAILHOG_WEB_PORT:-8025}:8025"   # Web UI
+  #   networks:
+  #     - forum-network
 
   # ===========================================
   # FRONTEND
