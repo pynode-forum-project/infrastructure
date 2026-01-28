@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "forum-project-collection",
     "name": "Forum Project API",
-    "description": "API collection for Forum Project microservices",
+    "description": "API collection for Forum Project. All requests go through the Gateway (base URL includes /api). Set 'token' after Login; use Authorization: Bearer {{token}} for protected routes.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -25,21 +25,12 @@
           "name": "Register",
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{"key": "Content-Type", "value": "application/json"}],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"firstName\": \"John\",\n    \"lastName\": \"Doe\",\n    \"email\": \"john@example.com\",\n    \"password\": \"Password123!\"\n}"
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"Password123!\"\n}"
             },
-            "url": {
-              "raw": "{{base_url}}/auth/register",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "register"]
-            }
+            "url": {"raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth", "register"]}
           }
         },
         {
@@ -50,9 +41,7 @@
               "script": {
                 "exec": [
                   "var jsonData = pm.response.json();",
-                  "if (jsonData.token) {",
-                  "    pm.collectionVariables.set('token', jsonData.token);",
-                  "}"
+                  "if (jsonData.token) { pm.collectionVariables.set('token', jsonData.token); }"
                 ],
                 "type": "text/javascript"
               }
@@ -60,42 +49,47 @@
           ],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{"key": "Content-Type", "value": "application/json"}],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"email\": \"superadmin@forum.com\",\n    \"password\": \"SuperAdmin123!\"\n}"
+              "raw": "{\n  \"email\": \"superadmin@forum.com\",\n  \"password\": \"SuperAdmin123!\"\n}"
             },
-            "url": {
-              "raw": "{{base_url}}/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "login"]
-            }
+            "url": {"raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"]}
           }
         },
         {
           "name": "Verify Email",
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{"key": "Content-Type", "value": "application/json"}],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"email\": \"john@example.com\",\n    \"token\": \"123456\"\n}"
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"token\": \"123456\"\n}"
             },
-            "url": {
-              "raw": "{{base_url}}/auth/verify-email",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "verify-email"]
-            }
+            "url": {"raw": "{{base_url}}/auth/verify-email", "host": ["{{base_url}}"], "path": ["auth", "verify-email"]}
+          }
+        },
+        {
+          "name": "Resend Verification",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/auth/resend-verification", "host": ["{{base_url}}"], "path": ["auth", "resend-verification"]}
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{token}}"}
+            ],
+            "url": {"raw": "{{base_url}}/auth/refresh-token", "host": ["{{base_url}}"], "path": ["auth", "refresh-token"]}
           }
         }
       ]
@@ -104,19 +98,18 @@
       "name": "Users",
       "item": [
         {
-          "name": "Get All Users",
+          "name": "Get All Users (Admin)",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
             "url": {
-              "raw": "{{base_url}}/users",
+              "raw": "{{base_url}}/users?page=1&per_page=20",
               "host": ["{{base_url}}"],
-              "path": ["users"]
+              "path": ["users"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "per_page", "value": "20"}
+              ]
             }
           }
         },
@@ -124,51 +117,78 @@
           "name": "Get User by ID",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/users/1",
-              "host": ["{{base_url}}"],
-              "path": ["users", "1"]
-            }
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": {"raw": "{{base_url}}/users/1", "host": ["{{base_url}}"], "path": ["users", "1"]}
           }
         },
         {
-          "name": "Ban User",
+          "name": "Update User",
           "request": {
             "method": "PUT",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
+              {"key": "Authorization", "value": "Bearer {{token}}"},
+              {"key": "Content-Type", "value": "application/json"}
             ],
-            "url": {
-              "raw": "{{base_url}}/users/2/ban",
-              "host": ["{{base_url}}"],
-              "path": ["users", "2", "ban"]
-            }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Doe\",\n  \"email\": \"jane@example.com\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/users/1", "host": ["{{base_url}}"], "path": ["users", "1"]}
           }
         },
         {
-          "name": "Unban User",
+          "name": "Update Profile Image",
           "request": {
             "method": "PUT",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
+              {"key": "Authorization", "value": "Bearer {{token}}"},
+              {"key": "Content-Type", "value": "application/json"}
             ],
-            "url": {
-              "raw": "{{base_url}}/users/2/unban",
-              "host": ["{{base_url}}"],
-              "path": ["users", "2", "unban"]
-            }
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"profileImageUrl\": \"https://bucket.s3.region.amazonaws.com/profile/1/uuid.jpg\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/users/1/profile-image", "host": ["{{base_url}}"], "path": ["users", "1", "profile-image"]}
+          }
+        },
+        {
+          "name": "Ban User (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": {"raw": "{{base_url}}/users/2/ban", "host": ["{{base_url}}"], "path": ["users", "2", "ban"]}
+          }
+        },
+        {
+          "name": "Unban User (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": {"raw": "{{base_url}}/users/2/unban", "host": ["{{base_url}}"], "path": ["users", "2", "unban"]}
+          }
+        },
+        {
+          "name": "Promote to Admin (Super Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": {"raw": "{{base_url}}/users/2/promote", "host": ["{{base_url}}"], "path": ["users", "2", "promote"]}
+          }
+        },
+        {
+          "name": "Demote to User (Super Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": {"raw": "{{base_url}}/users/2/demote", "host": ["{{base_url}}"], "path": ["users", "2", "demote"]}
+          }
+        },
+        {
+          "name": "Delete User (Super Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": {"raw": "{{base_url}}/users/2", "host": ["{{base_url}}"], "path": ["users", "2"]}
           }
         }
       ]
@@ -177,19 +197,21 @@
       "name": "Posts",
       "item": [
         {
-          "name": "Get All Posts",
+          "name": "Get Published Posts",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
             "url": {
-              "raw": "{{base_url}}/posts",
+              "raw": "{{base_url}}/posts?page=1&limit=20&sortBy=dateCreated&sortOrder=desc",
               "host": ["{{base_url}}"],
-              "path": ["posts"]
+              "path": ["posts"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "20"},
+                {"key": "sortBy", "value": "dateCreated"},
+                {"key": "sortOrder", "value": "desc"},
+                {"key": "userId", "value": "", "disabled": true}
+              ]
             }
           }
         },
@@ -198,46 +220,26 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              {"key": "Authorization", "value": "Bearer {{token}}"},
+              {"key": "Content-Type", "value": "application/json"}
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"title\": \"My First Post\",\n    \"content\": \"This is the content of my first post.\",\n    \"status\": \"published\"\n}"
+              "raw": "{\n  \"title\": \"My First Post\",\n  \"content\": \"This is the content.\",\n  \"status\": \"published\",\n  \"images\": [],\n  \"attachments\": []\n}"
             },
-            "url": {
-              "raw": "{{base_url}}/posts",
-              "host": ["{{base_url}}"],
-              "path": ["posts"]
-            }
+            "url": {"raw": "{{base_url}}/posts", "host": ["{{base_url}}"], "path": ["posts"]}
           }
         },
         {
           "name": "Get Post by ID",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
             "url": {
               "raw": "{{base_url}}/posts/:id",
               "host": ["{{base_url}}"],
               "path": ["posts", ":id"],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "post_id_here"
-                }
-              ]
+              "variable": [{"key": "id", "value": "POST_ID_HERE"}]
             }
           }
         },
@@ -245,57 +247,145 @@
           "name": "Get Drafts",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/posts/drafts",
-              "host": ["{{base_url}}"],
-              "path": ["posts", "drafts"]
-            }
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": {"raw": "{{base_url}}/posts/drafts", "host": ["{{base_url}}"], "path": ["posts", "drafts"]}
           }
         },
         {
-          "name": "Get Banned Posts",
+          "name": "Get Hidden Posts",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/posts/banned",
-              "host": ["{{base_url}}"],
-              "path": ["posts", "banned"]
-            }
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": {"raw": "{{base_url}}/posts/hidden", "host": ["{{base_url}}"], "path": ["posts", "hidden"]}
           }
         },
         {
-          "name": "Ban Post",
+          "name": "Get Banned Posts (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": {"raw": "{{base_url}}/posts/banned", "host": ["{{base_url}}"], "path": ["posts", "banned"]}
+          }
+        },
+        {
+          "name": "Get Deleted Posts (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": {"raw": "{{base_url}}/posts/deleted", "host": ["{{base_url}}"], "path": ["posts", "deleted"]}
+          }
+        },
+        {
+          "name": "Update Post",
           "request": {
             "method": "PUT",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
+              {"key": "Authorization", "value": "Bearer {{token}}"},
+              {"key": "Content-Type", "value": "application/json"}
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Title\",\n  \"content\": \"Updated content.\",\n  \"images\": [],\n  \"attachments\": []\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/posts/:id",
+              "host": ["{{base_url}}"],
+              "path": ["posts", ":id"],
+              "variable": [{"key": "id", "value": "POST_ID_HERE"}]
+            }
+          }
+        },
+        {
+          "name": "Update Post Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{token}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"published\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/posts/:id/status",
+              "host": ["{{base_url}}"],
+              "path": ["posts", ":id", "status"],
+              "variable": [{"key": "id", "value": "POST_ID_HERE"}]
+            }
+          }
+        },
+        {
+          "name": "Toggle Archive",
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": {
+              "raw": "{{base_url}}/posts/:id/archive",
+              "host": ["{{base_url}}"],
+              "path": ["posts", ":id", "archive"],
+              "variable": [{"key": "id", "value": "POST_ID_HERE"}]
+            }
+          }
+        },
+        {
+          "name": "Ban Post (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
             "url": {
               "raw": "{{base_url}}/posts/:id/ban",
               "host": ["{{base_url}}"],
               "path": ["posts", ":id", "ban"],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "post_id_here"
-                }
-              ]
+              "variable": [{"key": "id", "value": "POST_ID_HERE"}]
             }
+          }
+        },
+        {
+          "name": "Unban Post (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": {
+              "raw": "{{base_url}}/posts/:id/unban",
+              "host": ["{{base_url}}"],
+              "path": ["posts", ":id", "unban"],
+              "variable": [{"key": "id", "value": "POST_ID_HERE"}]
+            }
+          }
+        },
+        {
+          "name": "Recover Post (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": {
+              "raw": "{{base_url}}/posts/:id/recover",
+              "host": ["{{base_url}}"],
+              "path": ["posts", ":id", "recover"],
+              "variable": [{"key": "id", "value": "POST_ID_HERE"}]
+            }
+          }
+        },
+        {
+          "name": "Delete Post",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": {
+              "raw": "{{base_url}}/posts/:id",
+              "host": ["{{base_url}}"],
+              "path": ["posts", ":id"],
+              "variable": [{"key": "id", "value": "POST_ID_HERE"}]
+            }
+          }
+        },
+        {
+          "name": "Get User Top Posts",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": {"raw": "{{base_url}}/users/1/top-posts", "host": ["{{base_url}}"], "path": ["users", "1", "top-posts"]}
           }
         }
       ]
@@ -307,22 +397,12 @@
           "name": "Get Replies for Post",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
             "url": {
               "raw": "{{base_url}}/posts/:postId/replies",
               "host": ["{{base_url}}"],
               "path": ["posts", ":postId", "replies"],
-              "variable": [
-                {
-                  "key": "postId",
-                  "value": "post_id_here"
-                }
-              ]
+              "variable": [{"key": "postId", "value": "POST_ID_HERE"}]
             }
           }
         },
@@ -331,72 +411,71 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              {"key": "Authorization", "value": "Bearer {{token}}"},
+              {"key": "Content-Type", "value": "application/json"}
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"comment\": \"This is a reply to the post.\"\n}"
+              "raw": "{\n  \"comment\": \"This is a reply to the post.\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/posts/:postId/replies",
               "host": ["{{base_url}}"],
               "path": ["posts", ":postId", "replies"],
-              "variable": [
-                {
-                  "key": "postId",
-                  "value": "post_id_here"
-                }
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Messages",
-      "item": [
-        {
-          "name": "Send Contact Message",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n    \"email\": \"user@example.com\",\n    \"subject\": \"Need Help\",\n    \"message\": \"I need help with my account.\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/messages",
-              "host": ["{{base_url}}"],
-              "path": ["messages"]
+              "variable": [{"key": "postId", "value": "POST_ID_HERE"}]
             }
           }
         },
         {
-          "name": "Get All Messages (Admin)",
+          "name": "Create Sub-Reply",
           "request": {
-            "method": "GET",
+            "method": "POST",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
+              {"key": "Authorization", "value": "Bearer {{token}}"},
+              {"key": "Content-Type", "value": "application/json"}
             ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comment\": \"Nested reply.\",\n  \"postId\": \"POST_ID_HERE\",\n  \"parentReplyId\": \"PARENT_REPLY_ID\",\n  \"targetPath\": [0]\n}"
+            },
             "url": {
-              "raw": "{{base_url}}/messages",
+              "raw": "{{base_url}}/replies/:replyId/sub",
               "host": ["{{base_url}}"],
-              "path": ["messages"]
+              "path": ["replies", ":replyId", "sub"],
+              "variable": [{"key": "replyId", "value": "REPLY_ID_HERE"}]
+            }
+          }
+        },
+        {
+          "name": "Delete Nested Reply",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{token}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"targetPath\": [0]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/replies/:parentReplyId/nested",
+              "host": ["{{base_url}}"],
+              "path": ["replies", ":parentReplyId", "nested"],
+              "variable": [{"key": "parentReplyId", "value": "PARENT_REPLY_ID"}]
+            }
+          }
+        },
+        {
+          "name": "Delete Reply",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": {
+              "raw": "{{base_url}}/replies/:id",
+              "host": ["{{base_url}}"],
+              "path": ["replies", ":id"],
+              "variable": [{"key": "id", "value": "REPLY_ID_HERE"}]
             }
           }
         }
@@ -410,40 +489,146 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+              {"key": "Authorization", "value": "Bearer {{token}}"},
+              {"key": "Content-Type", "value": "application/json"}
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"postId\": \"post_id_here\"\n}"
+              "raw": "{\n  \"postId\": \"POST_OBJECT_ID_OR_STRING\"\n}"
             },
-            "url": {
-              "raw": "{{base_url}}/history",
-              "host": ["{{base_url}}"],
-              "path": ["history"]
-            }
+            "url": {"raw": "{{base_url}}/history", "host": ["{{base_url}}"], "path": ["history"]}
           }
         },
         {
           "name": "Get User History",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{token}}"
-              }
-            ],
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
             "url": {
-              "raw": "{{base_url}}/users/1/history",
+              "raw": "{{base_url}}/users/:id/history?page=1&limit=20",
               "host": ["{{base_url}}"],
-              "path": ["users", "1", "history"]
+              "path": ["users", ":id", "history"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "limit", "value": "20"}
+              ],
+              "variable": [{"key": "id", "value": "1"}]
+            }
+          }
+        },
+        {
+          "name": "Search User History",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": {
+              "raw": "{{base_url}}/users/:id/history/search?keyword=test&date=2025-01-15&tzOffset=-480",
+              "host": ["{{base_url}}"],
+              "path": ["users", ":id", "history", "search"],
+              "query": [
+                {"key": "keyword", "value": "test"},
+                {"key": "date", "value": "2025-01-15"},
+                {"key": "tzOffset", "value": "-480", "description": "Timezone offset in minutes (e.g. UTC+8 = -480)"}
+              ],
+              "variable": [{"key": "id", "value": "1"}]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "item": [
+        {
+          "name": "Send Contact Message (Public)",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"subject\": \"Need Help\",\n  \"message\": \"I need help with my account.\"\n}"
+            },
+            "url": {"raw": "{{base_url}}/messages", "host": ["{{base_url}}"], "path": ["messages"]}
+          }
+        },
+        {
+          "name": "Get All Messages (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": {
+              "raw": "{{base_url}}/messages?page=1&per_page=20&status=open",
+              "host": ["{{base_url}}"],
+              "path": ["messages"],
+              "query": [
+                {"key": "page", "value": "1"},
+                {"key": "per_page", "value": "20"},
+                {"key": "status", "value": "open", "description": "open | closed | omit for all"}
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Message Status (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{token}}"},
+              {"key": "Content-Type", "value": "application/json"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"closed\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/messages/:id/status",
+              "host": ["{{base_url}}"],
+              "path": ["messages", ":id", "status"],
+              "variable": [{"key": "id", "value": "1"}]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Files",
+      "item": [
+        {
+          "name": "Upload File",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {"key": "file", "type": "file", "src": ""},
+                {"key": "type", "value": "profile", "description": "profile | post | attachment | general"}
+              ]
+            },
+            "url": {"raw": "{{base_url}}/files/upload", "host": ["{{base_url}}"], "path": ["files", "upload"]}
+          }
+        },
+        {
+          "name": "Get File URL",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": {
+              "raw": "{{base_url}}/files/profile/1/uuid.jpg",
+              "host": ["{{base_url}}"],
+              "path": ["files", "profile", "1", "uuid.jpg"]
+            }
+          }
+        },
+        {
+          "name": "Delete File",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{token}}"}],
+            "url": {
+              "raw": "{{base_url}}/files/profile/1/uuid.jpg",
+              "host": ["{{base_url}}"],
+              "path": ["files", "profile", "1", "uuid.jpg"]
             }
           }
         }
